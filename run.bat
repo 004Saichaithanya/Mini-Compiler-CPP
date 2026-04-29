@@ -13,17 +13,17 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo [2/3] Running Bison...
-bison -d parser.y
+echo [2/3] Running YACC...
+yacc -d parser.y
 if %errorlevel% neq 0 (
-    echo Bison failed! Please make sure bison is installed and added to your PATH.
+    echo YACC failed! Please make sure yacc is installed and added to your PATH.
     pause
     exit /b %errorlevel%
 )
 
 echo.
 echo [3/3] Compiling C files...
-gcc lex.yy.c parser.tab.c ast.c semantic.c optimizer.c icg.c main.c -o compiler.exe
+gcc lex.yy.c y.tab.c ast.c semantic.c optimizer.c icg.c main.c -o compiler.exe
 if %errorlevel% neq 0 (
     echo GCC compilation failed! Please make sure MinGW/gcc is installed.
     pause

@@ -4,10 +4,10 @@ If you want to run the project step-by-step from your terminal, execute these co
    flex lexer.l
 
 2. Generate the C file and Header file for the Parser:
-   bison -d parser.y
+   yacc -d parser.y
 
 3. Compile all generated and source C files into an executable:
-   gcc lex.yy.c parser.tab.c ast.c semantic.c optimizer.c icg.c main.c -o compiler.exe
+   gcc lex.yy.c y.tab.c ast.c semantic.c optimizer.c icg.c main.c -o compiler.exe
 
 4. Run the compiled compiler with the sample input file:
    compiler.exe sample_input.c
