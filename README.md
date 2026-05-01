@@ -1,76 +1,92 @@
 # 🛠️ Mini-Compiler Project
 
-Welcome to the Mini-Compiler project! This is a complete, modular compiler built from scratch to translate a simplified C-like language into Intermediate Code (Three Address Code). It is designed to be simple, educational, and easy to understand.
-
-## 🚀 Technologies Used
-
-* **Lexical Analysis:** **Flex** (Fast Lexical Analyzer)
-* **Syntax Analysis:** **YACC** (Yet Another Compiler-Compiler)
-* **Core Logic & Data Structures:** **C Language**
+Welcome to the **Mini-Compiler** project! This is a complete, modular compiler built from scratch to translate a simplified C-like language into **Intermediate Code (Three Address Code)**. It is designed to be educational, efficient, and easy to understand for beginners.
 
 ---
 
-## ⚙️ How It Works: The 5 Phases of Our Compiler
+## 💻 Technologies Used
 
-Our compiler processes source code sequentially through five distinct phases. Here is a simple explanation of what each phase does and how it is implemented in our project.
+* **Lexical Analysis:** [Flex (Fast Lexical Analyzer)](https://github.com/westes/flex)
+* **Syntax Analysis:** [YACC (Yet Another Compiler-Compiler) / Bison](https://www.gnu.org/software/bison/)
+* **Language:** C / C++
+* **Environment:** GCC Compiler & Make/Batch scripts
 
-### 1️⃣ Phase 1: Lexical Analysis
-**What it does:** It reads the raw source code character by character and groups them into meaningful chunks called **Tokens**. 
-**How we built it (`lexer.l`):** We use **Flex**. We wrote regular expressions to identify keywords (like `int`, `if`, `while`), numbers, identifiers (variable names), and math operators (`+`, `-`, `=`, etc.). Flex ignores blank spaces and comments, handing only the clean tokens to the next phase.
+---
 
-### 2️⃣ Phase 2: Syntax Analysis & AST Generation
-**What it does:** It takes the tokens from Phase 1 and checks if they follow the grammatical rules of our language. At the same time, it builds an **Abstract Syntax Tree (AST)**, which is a structural map of the code.
-**How we built it (`parser.y` & `ast.c`):** We use **YACC** to define grammar rules (e.g., an assignment is `ID = Expression`). Whenever YACC matches a rule, our C code creates an `ASTNode` and links it together into a large tree. The AST strips away unnecessary characters like semicolons and just keeps the core operations.
+## ⚙️ The 5 Phases of the Compiler
+
+Our compiler processes source code sequentially through five distinct phases. Here is a detailed look at the flow of each stage:
+
+### 1️⃣ Phase 1: Lexical Analysis (The Lexer)
+To scan the source code and identify the "vocabulary" of the language.
+* **Input:** Raw text from a `.c` file.
+* **Process:** Using **Flex** (`lexer.l`), it uses Regular Expressions to group characters into **Tokens** (Keywords, Identifiers, Numbers, Operators). It ignores whitespace and comments.
+* **Output:** A stream of Tokens and a **Symbol Table** (storing variable names and their properties).
+
+### 2️⃣ Phase 2: Syntax Analysis (The Parser)
+To ensure the tokens are arranged in a grammatically correct order.
+* **Input:** The stream of Tokens provided by the Lexer.
+* **Process:** Using **YACC** (`parser.y`) and Context-Free Grammar (CFG), it validates the structure (e.g., ensuring an assignment follows the `ID = Expression` rule).
+* **Output:** An **Abstract Syntax Tree (AST)**, which is a structural map of the program logic.
 
 ### 3️⃣ Phase 3: Semantic Analysis
-**What it does:** It checks if the code makes logical sense. For example, you shouldn't be able to use a variable that was never declared, or declare the same variable twice.
-**How we built it (`semantic.c`):** We implemented a **Symbol Table** (a simple array structure). When the parser sees `int x;`, we save `x` in the Symbol Table. When the code later tries to do `x = 5;`, we look up `x` in the Symbol Table to ensure it exists.
+To check the "meaning" and logic of the code.
+* **Input:** The AST from the Parser and the Symbol Table from the Lexer.
+* **Process:** Implemented in `semantic.c`, it performs **Type Checking** (ensuring you don't add a string to an int) and **Scope Checking** (ensuring variables are declared before use).
+* **Output:** An **Annotated AST** (a verified tree ready for code generation).
 
-### 4️⃣ Phase 4: Code Optimization (Constant Folding)
-**What it does:** It tries to make the code faster before generating the final output. If it sees math that can be solved right now, it solves it.
-**How we built it (`optimizer.c`):** We traverse our AST from the bottom up. If we find an operator node (like `+`) where both the left and right children are plain numbers (e.g., `2 + 3`), we calculate the result (`5`) immediately and replace the whole subtree with just that final number. 
+### 4️⃣ Phase 4: Intermediate Code Generation (ICG)
+To translate the complex tree into simple, linear instructions.
+* **Input:** The Annotated AST.
+* **Process:** Implemented in `icg.c`, it flattens the tree into **Three Address Code (3AC)**. It uses temporary variables (like `t1`, `t2`) to break down complex expressions into steps with at most three addresses.
+* **Output:** **Intermediate Code (3AC)**.
 
-### 5️⃣ Phase 5: Intermediate Code Generation (ICG)
-**What it does:** It translates the complex AST into simple, assembly-like instructions called **Three Address Code (TAC)**. TAC breaks down complex equations into single, simple steps using temporary variables.
-**How we built it (`icg.c`):** We traverse the AST again. Every time we process an operation, we generate a new temporary variable (like `t1`, `t2`) and print the instruction. We also generate labels (like `L1:`) for `if` conditions and `while` loops to handle jumping around the code.
+### 5️⃣ Phase 5: Code Optimization
+To make the code run faster and take up less memory.
+* **Input:** The 3AC instructions.
+* **Process:** Implemented in `optimizer.c`, it performs logic cleanup such as **Constant Folding** (calculating `2 + 2` at compile time) and removing unreachable code.
+* **Output:** **Optimized Final Code**.
+
+---
+
+## 🔍 Step-by-Step Trace Example
+
+**Input Code:** `c = a + 5;`
+
+| Phase | Output Result |
+| :--- | :--- |
+| **Lexical** | `ID(c)`, `ASSIGN(=)`, `ID(a)`, `PLUS(+)`, `NUM(5)` |
+| **Syntax** | AST Node: `(Assignment: c, (Add: a, 5))` |
+| **Semantic** | Verified: `a` and `c` exist as compatible types. |
+| **ICG** | `t1 = a + 5` <br> `c = t1` |
+| **Optimizer** | `c = a + 5` (Removes redundant temporary variable) |
 
 ---
 
 ## 📁 Project Structure
 
-* `lexer.l` - Flex rules for generating tokens.
-* `parser.y` - YACC grammar rules for building the AST.
-* `ast.h` / `ast.c` - Defines the tree structure and handles printing it visually.
-* `semantic.h` / `semantic.c` - Manages the Symbol Table and semantic error checking.
-* `optimizer.h` / `optimizer.c` - Contains the logic for Constant Folding.
-* `icg.h` / `icg.c` - Traverses the AST to generate Three Address Code.
-* `main.c` - The main driver that runs all 5 phases in order.
-* `sample_input.c` - A test file containing sample code to compile.
-* `run.bat` / `commands.txt` - Scripts and instructions to compile and run the project.
+* `lexer.l` — Flex rules for generating tokens.
+* `parser.y` — YACC grammar rules for building the AST.
+* `ast.c` / `ast.h` — Defines the tree structure and visualizes the AST.
+* `semantic.c` — Manages the Symbol Table and logic checks.
+* `icg.c` — Generates Three Address Code (3AC) from the AST.
+* `optimizer.c` — Logic for Constant Folding and 3AC cleanup.
+* `sample_input.c` — A test file containing sample code to compile.
 
 ---
 
-## 💻 How to Run This Project on Windows
+## 🚀 How to Run
 
 ### Prerequisites
-Make sure you have the following tools added to your system PATH:
-1. **Flex**
-2. **YACC** (or Bison configured as Yacc)
-3. **GCC** (MinGW C Compiler)
+Ensure you have **Flex**, **YACC** (or Bison), and **GCC** added to your system PATH.
 
-### Running Automatically
-Simply double click the **`run.bat`** file. 
-It will automatically:
-1. Run Flex to generate `lex.yy.c`
-2. Run YACC to generate `y.tab.c` and `y.tab.h`
-3. Compile all C files using GCC
-4. Execute the compiler with `sample_input.c`
+### Running Automatically (Windows)
+Simply double-click the **`run.bat`** file. It handles the generation, compilation, and execution automatically.
 
 ### Running Manually
-If you want to run it step-by-step in your terminal, use these commands:
+Use the following commands in your terminal:
 ```cmd
 flex lexer.l
 yacc -d parser.y
 gcc lex.yy.c y.tab.c ast.c semantic.c optimizer.c icg.c main.c -o compiler.exe
 compiler.exe sample_input.c
-```
